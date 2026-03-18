@@ -1,5 +1,4 @@
 {
-  "projectName": "cycle-ai-app",
   "public": false,
   "buildCommand": "next build",
   "devCommand": "next dev",
