@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { Sidebar } from '@/components/Sidebar';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Chatbot } from '@/components/Chatbot';
+import { Recommendations } from '@/components/Recommendations';
 import { getCurrentUser, isAuthenticated } from '@/lib/auth';
 import { calculateCyclePredictions, getCycleEntries } from '@/lib/cyclePredictions';
 import { useCyclePredictions } from '@/hooks/useCyclePredictions';
@@ -16,6 +18,7 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<any[]>([]);
+  const [groqApiKey, setGroqApiKey] = useState<string>('');
 
   useEffect(() => {
     if (!isAuthenticated()) {
@@ -29,10 +32,36 @@ export default function Dashboard() {
       const cycleEntries = getCycleEntries(currentUser.id);
       setEntries(cycleEntries);
     }
+
+    // Get Groq API key from environment
+    const apiKey = process.env.NEXT_PUBLIC_GROQ_API_KEY || '';
+    setGroqApiKey(apiKey);
+
     setLoading(false);
   }, [router]);
 
   const { prediction } = useCyclePredictions(user?.id, user?.lastPeriodDate, user?.avgCycleLength);
+
+  // Format user history from cycle entries
+  const formatUserHistory = () => {
+    if (entries.length === 0) {
+      return 'No cycle data available yet.';
+    }
+
+    return entries
+      .map((entry) => {
+        const date = new Date(entry.periodStartDate).toLocaleDateString('en-US', {
+          month: 'short',
+          day: 'numeric',
+          year: 'numeric',
+        });
+        const symptoms = entry.symptoms?.length > 0 ? `Symptoms: ${entry.symptoms.join(', ')}` : '';
+        const mood = entry.mood ? `Mood: ${entry.mood}` : '';
+        const notes = entry.notes ? `Notes: ${entry.notes}` : '';
+        return `[${date}] Flow: ${entry.flowIntensity}, ${mood} ${symptoms} ${notes}`.trim();
+      })
+      .join(' | ');
+  };
 
   if (loading) {
     return (
@@ -223,7 +252,44 @@ export default function Dashboard() {
               </div>
             )}
           </Card>
-        </div>
+          {/* AI Features Section */}
+          {groqApiKey ? (
+            <div className="mt-8">
+              <h2 className="text-2xl font-bold text-foreground mb-6">AI-Powered Features</h2>
+              <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                {/* Chatbot */}
+                <div className="lg:col-span-2">
+                  <Chatbot groqApiKey={groqApiKey} />
+                </div>
+
+                {/* Recommendations */}
+                <div className="lg:col-span-2">
+                  <Recommendations groqApiKey={groqApiKey} userHistory={formatUserHistory()} />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Card className="p-6 mt-8 border-amber-200 bg-amber-50 dark:bg-amber-950/30">
+              <div className="flex gap-4 items-start">
+                <AlertCircle className="w-6 h-6 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                <div>
+                  <h3 className="font-semibold text-amber-900 dark:text-amber-400 mb-2">AI Features Not Available</h3>
+                  <p className="text-sm text-amber-800 dark:text-amber-300 mb-4">
+                    To use AI-powered Chat, Recommendations, and Data Summarization features, please add your Groq API key
+                    to your environment variables.
+                  </p>
+                  <p className="text-sm text-amber-800 dark:text-amber-300">
+                    <strong>Setup Instructions:</strong>
+                  </p>
+                  <ol className="text-sm text-amber-800 dark:text-amber-300 list-decimal list-inside mt-2 space-y-1">
+                    <li>Get your free Groq API key from <a href="https://console.groq.com" target="_blank" rel="noopener noreferrer" className="underline font-semibold">console.groq.com</a></li>
+                    <li>Add <code className="bg-amber-100 dark:bg-amber-900/50 px-2 py-1 rounded text-xs">NEXT_PUBLIC_GROQ_API_KEY=your_api_key</code> to <code className="bg-amber-100 dark:bg-amber-900/50 px-2 py-1 rounded text-xs">.env.local</code></li>
+                    <li>Restart your development server</li>
+                  </ol>
+                </div>
+              </div>
+            </Card>
+          )}        </div>
       </main>
     </div>
   );

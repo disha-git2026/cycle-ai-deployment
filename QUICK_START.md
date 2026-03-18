@@ -54,6 +54,22 @@ Go to login page and use:
 3. **View Analytics** - See charts and trends
 4. **Manage Profile** - Update your settings
 
+### ✨ AI Features (NEW!)
+Enable AI-powered features for advanced insights:
+
+**What's Available:**
+- **Chatbot Assistant** 💬 - Ask questions about your cycle and health
+- **Personalized Recommendations** 💡 - Get wellness tips based on your history
+- **Data Summarization** 📊 - Analyze trends and download reports
+
+**To Enable AI Features:**
+1. Get free Groq API key from [console.groq.com](https://console.groq.com)
+2. Add to `.env.local`: `NEXT_PUBLIC_GROQ_API_KEY=your_key_here`
+3. Restart dev server (`npm run dev`)
+4. See AI features on Dashboard!
+
+📚 **Full Setup Guide**: See [GROQ_AI_SETUP.md](./GROQ_AI_SETUP.md)
+
 ---
 
 ## File Structure (Just Know These)
